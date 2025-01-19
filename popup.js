@@ -1,6 +1,4 @@
-// 当DOM加载完成后执行
 document.addEventListener('DOMContentLoaded', function() {
-    // 获取DOM元素引用
     const shortenCurrentBtn = document.getElementById('shortenCurrentBtn');
     const shortenBtn = document.getElementById('shortenBtn');
     const longUrlInput = document.getElementById('longUrl');
@@ -22,13 +20,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteConfirmBtn = document.getElementById('deleteConfirmBtn');
     const deleteCancelBtn = document.getElementById('deleteCancelBtn');
     const quickAddBtn = document.getElementById('quickAddBtn');
-    
-    // 创建同步状态显示元素
     const syncStatusDiv = document.createElement('div');
     syncStatusDiv.className = 'sync-status';
     document.querySelector('.container').appendChild(syncStatusDiv);
-    
-    // 获取备份相关按钮
     const backupBtn = document.getElementById('backupBtn');
     const restoreBtn = document.getElementById('restoreBtn');
     const restoreFile = document.getElementById('restoreFile');
@@ -36,10 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const cookieRestoreBtn = document.getElementById('cookieRestoreBtn');
     const cookieRestoreFile = document.getElementById('cookieRestoreFile');
 
-    // 存储待删除菜单的索引
-    let pendingDeleteIndex = -1;
+    let pendingDeleteIndex = -1;  // 存储待删除的菜单索引
 
-    // 默认导航菜单配置
+    // 默认菜单项
     const defaultMenus = [
         { name: '网页记录', url: 'https://590.net/' },
         { name: '小灵日记', url: 'https://139.ink/' },
@@ -52,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
         { name: '图怪兽作图', url: 'https://818ps.com/home/mydesign' }
     ];
 
-    // 检查同步状态
+    // 添加同步状态检查
     function checkSyncStatus() {
         chrome.storage.sync.get(null, function(items) {
             const lastSync = new Date().toLocaleString();
@@ -71,16 +64,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 加载菜单数据
+    // 加载菜单
     function loadMenus() {
         chrome.storage.sync.get(['menus'], function(result) {
             let menus = result.menus || defaultMenus;
             renderMenus(menus);
-            checkSyncStatus();
+            checkSyncStatus(); // 每次加载菜单时更新同步状态
         });
     }
 
-    // 渲染菜单到页面
+    // 渲染菜单
     function renderMenus(menus) {
         navLinksDiv.innerHTML = '';
         menus.forEach((menu, index) => {
@@ -89,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
             a.target = '_blank';
             a.textContent = menu.name;
             
-            // 创建删除按钮
+            // 添加删除按钮
             const deleteBtn = document.createElement('span');
             deleteBtn.className = 'delete-btn';
             deleteBtn.textContent = '×';
@@ -104,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 删除菜单项
+    // 删除菜单
     function deleteMenu(index) {
         chrome.storage.sync.get(['deletePassword'], function(result) {
             const password = result.deletePassword;
@@ -119,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 执行删除菜单项操作
+    // 实际执行删除的函数
     function deleteMenuItem(index) {
         chrome.storage.sync.get(['menus'], function(result) {
             let menus = result.menus || defaultMenus;
@@ -131,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 添加当前页面到菜单
+    // 添加当前页面为菜单
     addCurrentBtn.addEventListener('click', () => {
         const menuName = menuNameInput.value.trim();
         if (!menuName) {
@@ -162,14 +155,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 获取当前标签页URL
+    // 获取当前标签页的URL
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         if (tabs[0]) {
             currentUrlDiv.textContent = '当前页面：' + tabs[0].url;
         }
     });
 
-    // 验证URL是否有效
+    // 验证URL
     function isValidUrl(url) {
         try {
             new URL(url);
@@ -179,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 显示消息提示
+    // 显示消息
     function showMessage(message, isError = false) {
         messageDiv.textContent = message;
         messageDiv.className = 'message ' + (isError ? 'error' : 'success');
@@ -190,10 +183,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 2000);
     }
 
-    // 缩短URL的核心功能
+    // 缩短URL
     async function shortenUrl(url) {
         try {
-            // 检查登录状态
+            // 首先检查登录状态
             const checkLoginResponse = await fetch('http://08.ink/api/user/info', {
                 method: 'GET',
                 headers: {
@@ -202,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (!checkLoginResponse.ok) {
-                // 未登录时使用快速缩短API
+                // 如果未登录，使用快速缩短API
                 const quickUrl = `http://08.ink/q/?u=${encodeURIComponent(url)}`;
                 const response = await fetch(quickUrl);
                 
@@ -214,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // 已登录或快速API失败时使用标准API
+            // 如果已登录或快速API失败，使用标准API
             const apiResponse = await fetch('http://08.ink/api/url/add', {
                 method: 'POST',
                 headers: {
@@ -240,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 缩短当前页面URL的点击事件处理
+    // 缩短当前页面URL
     shortenCurrentBtn.addEventListener('click', async () => {
         chrome.tabs.query({active: true, currentWindow: true}, async function(tabs) {
             if (tabs[0]) {
@@ -261,21 +254,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 } finally {
                     // 恢复按钮状态
                     shortenCurrentBtn.disabled = false;
-                    shortenCurrentBtn.textContent = '缩短当前页面';
+                    shortenCurrentBtn.textContent = '缩短当前网址';
                 }
             }
         });
     });
 
-    // 缩短输入URL的点击事件处理
+    // 缩短输入的URL
     shortenBtn.addEventListener('click', async () => {
         const url = longUrlInput.value.trim();
-        
         if (!url) {
-            showMessage('请输入网址', true);
+            showMessage('请输入要缩短的网址', true);
             return;
         }
-        
         if (!isValidUrl(url)) {
             showMessage('请输入有效的网址', true);
             return;
@@ -300,14 +291,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 复制短网址的点击事件处理
+    // 复制短网址
     copyBtn.addEventListener('click', () => {
         shortUrlInput.select();
         document.execCommand('copy');
         showMessage('已复制到剪贴板！');
     });
 
-    // 设置按钮点击事件
+    // 打开设置对话框
     settingsBtn.addEventListener('click', () => {
         chrome.storage.sync.get(['deletePassword'], function(result) {
             passwordInput.value = result.deletePassword || '';
@@ -315,25 +306,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 保存设置
-    saveBtn.addEventListener('click', () => {
-        const password = passwordInput.value.trim();
-        chrome.storage.sync.set({ deletePassword: password }, function() {
-            settingsDialog.classList.remove('show');
-            showMessage('设置已保存！');
-        });
-    });
-
-    // 取消设置
+    // 关闭设置对话框
     cancelBtn.addEventListener('click', () => {
         settingsDialog.classList.remove('show');
     });
 
+    // 保存密码设置
+    saveBtn.addEventListener('click', () => {
+        const password = passwordInput.value.trim();
+        chrome.storage.sync.set({ deletePassword: password }, function() {
+            settingsDialog.classList.remove('show');
+            showMessage('密码设置已保存！');
+        });
+    });
+
+    // 关闭删除对话框
+    deleteCancelBtn.addEventListener('click', () => {
+        deleteDialog.classList.remove('show');
+        pendingDeleteIndex = -1;
+    });
+
     // 确认删除
     deleteConfirmBtn.addEventListener('click', () => {
+        const inputPassword = deletePasswordInput.value.trim();
         chrome.storage.sync.get(['deletePassword'], function(result) {
-            const password = result.deletePassword;
-            if (deletePasswordInput.value === password) {
+            const savedPassword = result.deletePassword;
+            if (!savedPassword || savedPassword === inputPassword) {
+                // 密码正确或未设置密码，执行删除
                 deleteMenuItem(pendingDeleteIndex);
                 deleteDialog.classList.remove('show');
                 deletePasswordInput.value = '';
@@ -343,23 +342,224 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 取消删除
-    deleteCancelBtn.addEventListener('click', () => {
-        deleteDialog.classList.remove('show');
-        deletePasswordInput.value = '';
-    });
-
-    // 快速添加功能
+    // 添加一键添加脚本预览功能
     quickAddBtn.addEventListener('click', () => {
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             if (tabs[0]) {
-                const url = tabs[0].url;
-                const title = tabs[0].title;
+                const currentUrl = tabs[0].url;
+                const currentTitle = tabs[0].title;
+                const previewUrl = `https://590.net/?c=admin&page=add_quick_tpl&u=admin&fid=37&Auto_Off=0&Auto_add=0&property=0&url=${encodeURIComponent(currentUrl)}&title=${encodeURIComponent(currentTitle)}`;
                 
-                menuNameInput.value = title;
-                showMessage('已自动填充页面标题');
+                // 在新窗口中打开预览页面
+                chrome.windows.create({
+                    url: previewUrl,
+                    type: 'popup',
+                    width: 400,
+                    height: 460,
+                    left: 200,
+                    top: 200
+                });
             }
         });
+    });
+
+    // 下载备份
+    backupBtn.addEventListener('click', () => {
+        chrome.storage.sync.get(null, function(data) {
+            const backup = {
+                menus: data.menus || defaultMenus,
+                deletePassword: data.deletePassword || '',
+                timestamp: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `xiaolin_nav_backup_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showMessage('备份文件已下载！');
+        });
+    });
+
+    // 触发文件选择
+    restoreBtn.addEventListener('click', () => {
+        restoreFile.click();
+    });
+
+    // 处理文件恢复
+    restoreFile.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const backup = JSON.parse(e.target.result);
+                
+                // 验证备份数据格式
+                if (!Array.isArray(backup.menus)) {
+                    throw new Error('无效的备份文件格式');
+                }
+                
+                // 验证每个菜单项
+                backup.menus.forEach(menu => {
+                    if (!menu.name || !menu.url || typeof menu.name !== 'string' || typeof menu.url !== 'string') {
+                        throw new Error('菜单项格式不正确');
+                    }
+                });
+                
+                // 恢复数据
+                chrome.storage.sync.set({
+                    menus: backup.menus,
+                    deletePassword: backup.deletePassword || ''
+                }, function() {
+                    renderMenus(backup.menus);
+                    showMessage('数据恢复成功！');
+                    checkSyncStatus();
+                });
+            } catch (error) {
+                showMessage('恢复失败：' + error.message, true);
+            }
+            
+            // 清除文件选择
+            event.target.value = '';
+        };
+        
+        reader.onerror = () => {
+            showMessage('文件读取失败', true);
+            event.target.value = '';
+        };
+        
+        reader.readAsText(file);
+    });
+
+    // 下载Cookie备份
+    cookieBackupBtn.addEventListener('click', async () => {
+        try {
+            // 获取所有域名的cookie
+            const domains = [
+                "08.ink",
+                "590.net",
+                "139.ink",
+                "c.139.ink",
+                "app.139.ink",
+                "kimi.moonshot.cn",
+                "hifizg.com",
+                "818ps.com"
+            ];
+
+            let allCookies = {};
+            
+            for (const domain of domains) {
+                const cookies = await chrome.cookies.getAll({domain: domain});
+                if (cookies.length > 0) {
+                    allCookies[domain] = cookies;
+                }
+            }
+
+            const backup = {
+                cookies: allCookies,
+                timestamp: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `xiaolin_cookies_backup_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showMessage('Cookie备份已下载！');
+        } catch (error) {
+            showMessage('Cookie备份失败：' + error.message, true);
+        }
+    });
+
+    // 触发Cookie文件选择
+    cookieRestoreBtn.addEventListener('click', () => {
+        cookieRestoreFile.click();
+    });
+
+    // 处理Cookie文件恢复
+    cookieRestoreFile.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+            const text = await file.text();
+            const backup = JSON.parse(text);
+            
+            // 验证备份数据格式
+            if (!backup.cookies || typeof backup.cookies !== 'object') {
+                throw new Error('无效的Cookie备份文件格式');
+            }
+            
+            let successCount = 0;
+            let failCount = 0;
+            
+            // 恢复每个域名的cookies
+            for (const [domain, cookies] of Object.entries(backup.cookies)) {
+                for (const cookie of cookies) {
+                    try {
+                        // 首先删除现有的cookie
+                        await chrome.cookies.remove({
+                            url: `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`,
+                            name: cookie.name
+                        });
+
+                        // 构建cookie对象，只包含必要的属性
+                        const cookieData = {
+                            url: `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`,
+                            name: cookie.name,
+                            value: cookie.value,
+                            domain: cookie.domain,
+                            path: cookie.path || '/',
+                            secure: !!cookie.secure,
+                            httpOnly: !!cookie.httpOnly
+                        };
+
+                        // 添加可选属性
+                        if (typeof cookie.expirationDate === 'number') {
+                            cookieData.expirationDate = cookie.expirationDate;
+                        }
+                        
+                        if (cookie.sameSite && ['lax', 'strict', 'none'].includes(cookie.sameSite.toLowerCase())) {
+                            cookieData.sameSite = cookie.sameSite.toLowerCase();
+                            // 如果sameSite为none，secure必须为true
+                            if (cookieData.sameSite === 'none') {
+                                cookieData.secure = true;
+                            }
+                        }
+
+                        // 设置cookie
+                        await chrome.cookies.set(cookieData);
+                        successCount++;
+                    } catch (error) {
+                        console.error(`恢复Cookie失败: ${domain}, ${cookie.name}`, error);
+                        failCount++;
+                    }
+                }
+            }
+            
+            if (failCount === 0) {
+                showMessage(`Cookie恢复成功！共恢复${successCount}个Cookie`);
+            } else {
+                showMessage(`Cookie部分恢复成功！成功${successCount}个，失败${failCount}个`, true);
+            }
+        } catch (error) {
+            showMessage('Cookie恢复失败：' + error.message, true);
+        }
+        
+        // 清除文件选择
+        event.target.value = '';
     });
 
     // 初始化加载菜单
