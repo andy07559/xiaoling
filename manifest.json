@@ -1,34 +1,21 @@
 {
-  // 指定Chrome插件的清单文件版本，使用最新的Manifest V3
   "manifest_version": 3,
-  
-  // 插件名称
   "name": "小灵导航",
-  
-  // 插件版本号
   "version": "2.1",
-  
-  // 插件描述
   "description": "一键生成08.ink短网址和导航",
-  
-  // 插件所需权限
   "permissions": [
-    "activeTab",     // 访问当前活动标签页
-    "clipboardWrite", // 写入剪贴板权限
-    "storage",       // 使用Chrome存储API
-    "cookies"        // 访问cookie权限
+    "activeTab",
+    "clipboardWrite",
+    "storage",
+    "cookies"
   ],
-  
-  // 主机权限配置
   "host_permissions": [
-    "http://08.ink/*",    // 允许访问08.ink域名
-    "https://08.ink/*",   // 允许访问08.ink安全域名
-    "http://*/*",         // 允许访问所有HTTP网站
-    "https://*/*"         // 允许访问所有HTTPS网站
+    "http://08.ink/*",
+    "https://08.ink/*",
+    "http://*/*",
+    "https://*/*"
   ],
-  
-  // 插件操作配置
   "action": {
-    "default_popup": "popup.html"  // 点击插件图标时打开的页面
+    "default_popup": "popup.html"
   }
 } 
