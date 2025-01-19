@@ -1,0 +1,33 @@
+# IDE和编辑器文件
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# 临时文件
+*.log
+*.tmp
+*.temp
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 打包和发布文件
+dist/
+build/
+*.zip
+*.crx
+*.pem
+
+# 其他
+*.bak
+*.swp
+*~ 

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>小灵导航</title>
+    <style>
+        /* 基础样式设置 */
+        body {
+            width: 320px;            /* 设置插件弹出窗口宽度 */
+            padding: 15px;           /* 内边距 */
+            font-family: Arial, sans-serif;  /* 字体设置 */
+        }
+        
+        /* 容器布局 */
+        .container {
+            display: flex;           /* 弹性布局 */
+            flex-direction: column;  /* 垂直方向排列 */
+            gap: 10px;              /* 元素间距 */
+        }
+        
+        /* 输入框样式 */
+        input[type="text"] {
+            width: 100%;            /* 宽度占满容器 */
+            padding: 8px;           /* 内边距 */
+            border: 1px solid #ddd; /* 边框样式 */
+            border-radius: 4px;     /* 圆角 */
+            box-sizing: border-box; /* 盒模型计算方式 */
+        }
+        
+        /* 按钮样式 */
+        button {
+            padding: 8px 15px;
+            background: linear-gradient(45deg, #FF3CAC, #2B86C5); /* 渐变背景 */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease; /* 过渡动画 */
+        }
+        
+        /* 按钮悬浮效果 */
+        button:hover {
+            transform: translateY(-2px);     /* 上移动画 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* 阴影效果 */
+        }
+        
+        /* 禁用按钮样式 */
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* 结果显示区域 */
+        .result {
+            display: none;          /* 默认隐藏 */
+            margin-top: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        /* 结果显示动画 */
+        .result.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        /* 消息提示样式 */
+        .message {
+            padding: 8px;
+            margin-top: 10px;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+        }
+        
+        /* 消息显示动画 */
+        .message.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        /* 成功消息样式 */
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        /* 错误消息样式 */
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* 淡入动画定义 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 标题样式 */
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        /* 当前URL显示区域 */
+        .current-url {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 12px;
+            word-break: break-all;  /* 长URL自动换行 */
+        }
+        
+        /* 导航链接区域 */
+        .nav-links {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 两列布局 */
+            gap: 8px;
+        }
+        
+        /* 导航链接样式 */
+        .nav-links a {
+            display: block;
+            padding: 8px;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            text-align: center;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        /* 导航链接悬浮效果 */
+        .nav-links a:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        /* 删除按钮样式 */
+        .nav-links a .delete-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 16px;
+            height: 16px;
+            line-height: 16px;
+            text-align: center;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            display: none;
+            cursor: pointer;
+        }
+        
+        /* 删除按钮显示触发 */
+        .nav-links a:hover .delete-btn {
+            display: block;
+        }
+        
+        /* 分隔线样式 */
+        .divider {
+            height: 1px;
+            background: #dee2e6;
+            margin: 10px 0;
+            grid-column: 1 / -1;  /* 横跨所有列 */
+        }
+        
+        /* 添加菜单区域 */
+        .add-menu {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        /* 添加菜单输入框 */
+        .add-menu input {
+            flex: 1;
+        }
+        
+        /* 添加菜单按钮 */
+        .add-menu button {
+            white-space: nowrap;
+        }
+        
+        /* 设置按钮样式 */
+        .settings-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* 设置按钮悬浮效果 */
+        .settings-btn:hover {
+            background: #e9ecef;
+            transform: rotate(45deg);
+        }
+        
+        /* 密码对话框 */
+        .password-dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* 密码对话框显示 */
+        .password-dialog.show {
+            display: flex;
+        }
+        
+        /* 对话框内容区域 */
+        .dialog-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 300px;
+        }
+        
+        /* 对话框标题 */
+        .dialog-title {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        /* 对话框按钮组 */
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        /* 对话框按钮 */
+        .dialog-buttons button {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        
+        /* 密码输入框 */
+        .password-input {
+            margin-bottom: 10px;
+        }
+        
+        /* 快速添加按钮 */
+        .quick-add-btn {
+            width: 100%;
+            margin: 10px 0;
+            background: linear-gradient(45deg, #4CAF50, #2196F3);
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        /* 快速添加按钮悬浮效果 */
+        .quick-add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* 同步状态显示 */
+        .sync-status {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: #666;
+            background: rgba(255,255,255,0.9);
+            padding: 4px 8px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        /* 同步状态显示动画 */
+        .sync-status.show {
+            opacity: 1;
+        }
+        
+        /* 同步状态图标 */
+        .sync-status::before {
+            content: '🔄';
+            margin-right: 4px;
+        }
+        
+        /* 旋转动画定义 */
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .sync-status.syncing::before {
+            animation: rotate 1s linear infinite;
+        }
+        .settings-section {
+            margin-bottom: 20px;
+        }
+        .settings-section h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .backup-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .backup-buttons button {
+            flex: 1;
+            font-size: 13px;
+            padding: 6px 12px;
+            background: #f0f0f0;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .backup-buttons button:hover {
+            background: #e0e0e0;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 标题区域 -->
+        <div class="title">小灵导航</div>
+        
+        <!-- 当前URL显示区域 -->
+        <div id="currentUrl" class="current-url"></div>
+        
+        <!-- 短网址生成区域 -->
+        <div>
+            <input type="text" id="longUrl" placeholder="输入需要缩短的网址">
+            <button id="shortenBtn">生成短网址</button>
+            <button id="shortenCurrentBtn">缩短当前页面</button>
+        </div>
+        
+        <!-- 结果显示区域 -->
+        <div id="result" class="result">
+            <input type="text" id="shortUrl" readonly>
+            <button id="copyBtn">复制</button>
+        </div>
+        
+        <!-- 消息提示区域 -->
+        <div id="message" class="message"></div>
+        
+        <!-- 导航链接区域 -->
+        <div id="navLinks" class="nav-links"></div>
+        
+        <!-- 添加菜单区域 -->
+        <div class="add-menu">
+            <input type="text" id="menuName" placeholder="输入菜单名称">
+            <button id="addCurrentBtn">添加当前页面</button>
+        </div>
+        
+        <!-- 快速添加按钮 -->
+        <button id="quickAddBtn" class="quick-add-btn">快速添加到导航</button>
+        
+        <!-- 设置按钮 -->
+        <button id="settingsBtn" class="settings-btn">⚙</button>
+    </div>
+    
+    <!-- 设置对话框 -->
+    <div id="settingsDialog" class="password-dialog">
+        <div class="dialog-content">
+            <h3 class="dialog-title">设置删除密码</h3>
+            <input type="password" id="passwordInput" class="password-input" placeholder="输入密码">
+            <div class="dialog-buttons">
+                <button id="saveBtn">保存</button>
+                <button id="cancelBtn">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 删除确认对话框 -->
+    <div id="deleteDialog" class="password-dialog">
+        <div class="dialog-content">
+            <h3 class="dialog-title">输入删除密码</h3>
+            <input type="password" id="deletePasswordInput" class="password-input" placeholder="输入密码">
+            <div class="dialog-buttons">
+                <button id="deleteConfirmBtn">确认</button>
+                <button id="deleteCancelBtn">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 备份/恢复功能 -->
+    <div style="display: none;">
+        <input type="file" id="restoreFile">
+        <input type="file" id="cookieRestoreFile">
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html> 
