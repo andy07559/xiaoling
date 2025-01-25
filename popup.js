@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const cookieBackupBtn = document.getElementById('cookieBackupBtn');
     const cookieRestoreBtn = document.getElementById('cookieRestoreBtn');
     const cookieRestoreFile = document.getElementById('cookieRestoreFile');
+    const syncBtn = document.getElementById('syncBtn');
 
     let pendingDeleteIndex = -1;  // 存储待删除的菜单索引
 
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         { name: '小灵网盘', url: 'https://c.139.ink/home' },
         { name: '短域名', url: 'http://08.ink/' },
         { name: '网页转APP', url: 'https://app.139.ink/' },
-        { name: 'AI助手', url: 'https://kimi.moonshot.cn/chat/' },
+        { name: 'AI助手', url: 'https://kimi.moonshot.cn/chat/?ref=xuwenting' },
         { name: '在线阿里', url: 'http://38.147.172.106:8188/' },
         { name: '音乐社', url: 'https://hifizg.com/index/proclass' },
         { name: '图怪兽作图', url: 'https://818ps.com/home/mydesign' }
@@ -560,6 +561,42 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 清除文件选择
         event.target.value = '';
+    });
+
+    // 从URL同步数据
+    syncBtn.addEventListener('click', async () => {
+        try {
+            const response = await fetch('https://c.139.ink/f/MPAtW/xiaolin.json');
+            console.log('Sync Response Status:', response.status);
+            if (!response.ok) {
+                throw new Error('同步失败，请检查网络连接');
+            }
+            
+            const data = await response.json();
+            console.log('Sync Response Data:', data);
+            
+            // 验证数据格式
+            if (!Array.isArray(data.menus)) {
+                throw new Error('无效的同步数据格式');
+            }
+            
+            // 对菜单项进行兼容性处理
+            const fixedMenus = data.menus.map(menu => ({
+                name: menu.name ? String(menu.name) : '',
+                url: menu.url ? String(menu.url) : ''
+            }));
+            
+            // 更新存储
+            chrome.storage.sync.set({ menus: fixedMenus }, function() {
+                console.log('Chrome Storage Updated');
+                renderMenus(fixedMenus);
+                showMessage('数据同步成功！');
+                checkSyncStatus();
+            });
+        } catch (error) {
+            console.error('Sync Error:', error);
+            showMessage('同步失败：' + error.message, true);
+        }
     });
 
     // 初始化加载菜单
